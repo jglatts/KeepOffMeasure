@@ -28,7 +28,6 @@ namespace KeepOffMeasure
         private CamMeasure camMeasure;
         private int camIndex;
         private bool startPixCalibrate;
-        private bool hasFirstCalibrationPoint;
         private int pix_per_inch;
 
         public Form1()
@@ -37,7 +36,6 @@ namespace KeepOffMeasure
             camIndex = 0;
             pix_per_inch = 0;
             startPixCalibrate = false;
-            hasFirstCalibrationPoint = false;
             txtBoxPixPerInch.Enabled = false;
             txtBoxPixPerMil.Enabled = false;
             camMeasure = new CamMeasure();
@@ -100,7 +98,10 @@ namespace KeepOffMeasure
                 }
                 mainFeedPicBox.Image = image;
             }
-            catch(Exception ex) { }
+            catch(Exception ex) 
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
 
         private void btnCalibratePixPerMill_Click(object sender, EventArgs e)
@@ -125,9 +126,10 @@ namespace KeepOffMeasure
                 txtBoxPixPerInch.Enabled = true;
                 txtBoxPixPerMil.Enabled = true;
                 txtBoxPixPerInch.Text = ret.pix_per_inch.ToString();
-                txtBoxPixPerMil.Text = ret.pix_per_mill.ToString();
+                txtBoxPixPerMil.Text = Math.Round(ret.pix_per_mill, 3).ToString();
                 txtBoxPixPerInch.Enabled = false;
                 txtBoxPixPerMil.Enabled = false;
+                startPixCalibrate = false;
             }
 
         }
@@ -144,6 +146,8 @@ namespace KeepOffMeasure
                 MessageBox.Show("error\nplease calibrate pix-per-inch");
                 return;
             }
+
+            // image processing here
         }
     }
 }
