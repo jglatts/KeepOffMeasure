@@ -180,9 +180,25 @@ namespace KeepOffMeasure
                 return;
             }
 
+            calcKeepOff();
+        }
+
+        /*
+            In OpenCV's Canny edge detection, two threshold values, 
+            threshold1 and threshold2, play a crucial role in the hysteresis thresholding stage. 
+            This stage aims to eliminate weak edges while preserving significant ones.
+                threshold1: 
+                    It is the lower threshold. 
+                    Any edge with a gradient magnitude below this value is immediately discarded.
+                threshold2: 
+                    It is the higher threshold. 
+                    Any edge with a gradient magnitude above this value is considered a strong edge and is preserved.
+        */
+        private void calcKeepOff()
+        {
             // test thresh values
             // also test smaller AOI
-            Mat src_gray = new Mat(); 
+            Mat src_gray = new Mat();
             Mat src_canny = new Mat();
             Mat src_roi = frame.Clone();
             OpenCvSharp.Point[][] contours;
@@ -204,5 +220,6 @@ namespace KeepOffMeasure
 
             Cv2.ImShow("contours", src_canny);
         }
+
     }
 }
