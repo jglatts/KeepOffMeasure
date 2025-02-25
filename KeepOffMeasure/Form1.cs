@@ -201,7 +201,6 @@ namespace KeepOffMeasure
             Mat src_gray = new Mat();
             Mat src_canny = new Mat();
             Mat src_roi = frame.Clone();
-            OpenCvSharp.Point[][] contours;
             OpenCvSharp.Point[][] found_contours;
 
             // filter the image and remove noise
@@ -223,32 +222,44 @@ namespace KeepOffMeasure
                 https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
                 should test using differnet hierachy methods 
              */
-            Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
-            //Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_16UC1);
+            Mat debug_mat_one = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
+            Mat debug_mat_two = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
 
-            Cv2.DrawContours(debug_mat, found_contours, -1, new Scalar(255, 0),
+            Cv2.DrawContours(debug_mat_one, found_contours, -1, new Scalar(255, 0),
                                      thickness: 2, hierarchy: hierarchyIndexes);
 
-            //Cv2.Line(debug_mat, mainFeedPicBox.Width/2, 10, mainFeedPicBox.Width/2, 150, new Scalar(255, 0), thickness:2);
 
-            string s = "";
+            // first loop for keep off measurment
+            // loop through all contours where child != 1
+            //      get the smallest y-value
+            //      that value is where the wire ENDS
+            int wire_end_y = 10000;
             for (int i = 0; i < hierarchyIndexes.Length; i++)
             {
                 if (hierarchyIndexes[i].Child != -1)
                 {
-                    s += "index " + i + " child == " + hierarchyIndexes[i].Child + "\n" +
-                         "contours " + found_contours[i].Length + "\n\n";
-                    /*
-                    Cv2.DrawContours(debug_mat, found_contours, i, new Scalar(255, 0), 
+                    // this is a wire
+                    Cv2.DrawContours(debug_mat_two, found_contours, i, new Scalar(255, 0),
                                      thickness: 2, hierarchy: hierarchyIndexes);
-                    */
+
+                    for (int j = 0; j < found_contours[i].Length; j++)
+                    {
+                        int check_y = found_contours[i][j].Y;
+                        if (check_y < wire_end_y)
+                            wire_end_y = check_y;
+                    }
+
                 }
+
             }
+
+            Cv2.Circle(debug_mat_two, debug_mat_two.Width/2, wire_end_y, 5, new Scalar(255, 0), thickness:2);
             Cv2.ImShow("contours", src_canny);
-            Cv2.ImShow("heirachy", debug_mat);
+            Cv2.ImShow("all-contours", debug_mat_one);
+            Cv2.ImShow("heirachy", debug_mat_two);
             MessageBox.Show("found " + found_contours.Length.ToString() + " contours\n" +
-                            "found " + hierarchyIndexes.Length.ToString() + " hieracrhies\n\n" +
-                            s);
+                            "found " + hierarchyIndexes.Length.ToString() + " hieracrhies\n" + 
+                            "wire_end_y " + wire_end_y);
         }
 
     }
