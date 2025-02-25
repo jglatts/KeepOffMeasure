@@ -42,7 +42,7 @@ namespace KeepOffMeasure
             Cv2.Line(frame, measure_points[1].X, 0, measure_points[1].X, frame.Rows, new Scalar(0, 255), thickness: 3);
             int pix_dist = Math.Abs(measure_points[1].X - measure_points[0].X);
             Cv2.Line(frame, measure_points[0].X, height / 2, measure_points[1].X, height / 2, new Scalar(0, 255), thickness: 3);
-            MessageBox.Show("Pixel Distance: " + pix_dist);
+            MessageBox.Show("Pixel Distance: " + pix_dist, Form1.msg_title_str);
             string ret_input = Interaction.InputBox("Enter Pitch Of Measurements");
 
             // compute pix-per-inch and others
@@ -54,7 +54,7 @@ namespace KeepOffMeasure
                 string s = "Pixels-Per-Inch:\t" + ret.pix_per_inch;
                 s += "\nPixels-Per-Mill:\t" + Math.Round(ret.pix_per_mill, 7);
                 s += "\nMills-Per-Pixel:\t" + Math.Round(ret.mill_per_pix, 7);
-                MessageBox.Show(s, "Z-Axis Connector Company");
+                MessageBox.Show(s, Form1.msg_title_str);
             }
 
             Cv2.ImShow("test", frame);
@@ -68,7 +68,7 @@ namespace KeepOffMeasure
 
             if (src_frame == null)
             {
-                MessageBox.Show("error with CamMeasure.addpoint()\n cam == null");
+                MessageBox.Show("error with CamMeasure.addpoint()\n cam == null", Form1.msg_title_str);
                 return ret;
             }
 
@@ -78,7 +78,7 @@ namespace KeepOffMeasure
                 ret = computePixCalculations(src_frame, height);
                 if (ret.pix_per_mill == -1)
                 {
-                    MessageBox.Show("error with calculations!", "Z-Axis Connector Company");
+                    MessageBox.Show("error with calculations!", Form1.msg_title_str);
                 }
                 measure_points.Clear();
             }

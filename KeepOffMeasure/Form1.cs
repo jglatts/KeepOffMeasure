@@ -32,6 +32,8 @@ namespace KeepOffMeasure
         private int pix_per_inch;
         private int thresh_one;
         private int thresh_two;
+        public static readonly string msg_title_str = "Z-Axis Connector Company";
+        private static readonly int wire_contour_const = 30;
 
         public Form1()
         {
@@ -59,11 +61,11 @@ namespace KeepOffMeasure
             {
                 capture = new VideoCapture(camIndex);
                 capture.Open(camIndex);
-                MessageBox.Show("Camera Found!");
+                MessageBox.Show("Camera Found!", msg_title_str);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + "\n" + ex.StackTrace + "\n" + ex.InnerException);
+                MessageBox.Show(ex.Message + "\n" + ex.StackTrace + "\n" + ex.InnerException, msg_title_str);
                 return;
             }
         }
@@ -111,7 +113,7 @@ namespace KeepOffMeasure
             }
             catch(Exception ex) 
             {
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show(ex.ToString(), msg_title_str);
             }
         }
 
@@ -170,13 +172,13 @@ namespace KeepOffMeasure
         {
             if (pix_per_inch == 0)
             {
-                MessageBox.Show("error\nplease calibrate pix-per-inch");
+                MessageBox.Show("error\nplease calibrate pix-per-inch", msg_title_str);
                 return;
             }
 
             if (!getThreshValues())
             {
-                MessageBox.Show("error\nplease check thresh values!");
+                MessageBox.Show("error\nplease check thresh values!", msg_title_str);
                 return;
             }
 
@@ -200,8 +202,14 @@ namespace KeepOffMeasure
             // also test smaller AOI
             Mat src_gray = new Mat();
             Mat src_canny = new Mat();
+            Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
             Mat src_roi = frame.Clone();
             OpenCvSharp.Point[][] found_contours;
+            int wire_end_y = 10000;
+            int core_end_y = 10000;
+            int keep_off_pix = -1;
+            double keep_off_dist = 0;
+
 
             // filter the image and remove noise
             // could also consider shaperning or blurring
@@ -210,7 +218,7 @@ namespace KeepOffMeasure
 
             // perform canny alg for edges
             // https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
-            Cv2.Canny(src_gray, src_canny, thresh_one, thresh_two, 3, false);
+            Cv2.Canny(src_gray, src_canny, thresh_one, thresh_two);
 
             // find the countours of this frame
             Cv2.FindContours(src_canny, out found_contours, out hierarchyIndexes,
@@ -222,18 +230,23 @@ namespace KeepOffMeasure
                 https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
                 should test using differnet hierachy methods 
              */
-            Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
 
             // first loop for keep off measurment
             // loop through all contours where child != 1
             //      get the smallest y-value
             //      that value is where the wire ENDS
-            int wire_end_y = 10000;
             for (int i = 0; i < hierarchyIndexes.Length; i++)
             {
+
+                // working OK with .Child != -1
+                // test out other values
                 if (hierarchyIndexes[i].Child != -1)
                 {
-                    // this is a wire
+                    // test this out, can check if we have wire end
+                    OpenCvSharp.Point[] check_contours = found_contours[i];
+                    if (check_contours.Length < wire_contour_const)
+                        continue;
+                    
                     Cv2.DrawContours(debug_mat, found_contours, i, new Scalar(255, 0),
                                      thickness: 2, hierarchy: hierarchyIndexes);
 
@@ -250,10 +263,35 @@ namespace KeepOffMeasure
 
             // second loop
             // will need to find where CORE ends
+            // naive:
+            //  (go through all contours and lowest y is the core end)
+            for (int i = 0; i < found_contours.Length; i++)
+            {
+                for (int j = 0; j < found_contours[i].Length; j++)
+                { 
+                    int curr_y = found_contours[i][j].Y;
+                    if (curr_y < core_end_y)
+                        core_end_y = curr_y;
+                }
+            }
+
+            keep_off_pix = wire_end_y - core_end_y;
+            if (keep_off_pix > 0)
+            {
+                Cv2.Line(debug_mat, debug_mat.Width/2, core_end_y, debug_mat.Width/2, wire_end_y, 
+                         new Scalar(255, 0), thickness:2);
+
+                keep_off_dist = Math.Round(keep_off_pix / (double)pix_per_inch, 6);
+
+            }
 
             Cv2.Circle(debug_mat, debug_mat.Width/2, wire_end_y, 5, new Scalar(255, 0), thickness:2);
+            Cv2.Circle(debug_mat, debug_mat.Width/2, core_end_y, 5, new Scalar(255, 0), thickness:2);
             Cv2.ImShow("canny", src_canny);
             Cv2.ImShow("heirachy", debug_mat);
+
+            if (keep_off_dist != 0)
+                MessageBox.Show("keep off distance: " + keep_off_dist, msg_title_str);
         }
 
     }
