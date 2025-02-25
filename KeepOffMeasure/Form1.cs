@@ -48,7 +48,7 @@ namespace KeepOffMeasure
             txtBoxPixPerInch.Enabled = false;
             txtBoxPixPerMil.Enabled = false;
             camMeasure = new CamMeasure();
-            txtCannyThresh1.Text = "700";
+            txtCannyThresh1.Text = "770"; // increase this to leave out image noise
             txtCannyThresh2.Text = "300";
             this.ActiveControl = btnStartLiveFeed;
         }
@@ -222,12 +222,7 @@ namespace KeepOffMeasure
                 https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
                 should test using differnet hierachy methods 
              */
-            Mat debug_mat_one = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
-            Mat debug_mat_two = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
-
-            Cv2.DrawContours(debug_mat_one, found_contours, -1, new Scalar(255, 0),
-                                     thickness: 2, hierarchy: hierarchyIndexes);
-
+            Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
 
             // first loop for keep off measurment
             // loop through all contours where child != 1
@@ -239,7 +234,7 @@ namespace KeepOffMeasure
                 if (hierarchyIndexes[i].Child != -1)
                 {
                     // this is a wire
-                    Cv2.DrawContours(debug_mat_two, found_contours, i, new Scalar(255, 0),
+                    Cv2.DrawContours(debug_mat, found_contours, i, new Scalar(255, 0),
                                      thickness: 2, hierarchy: hierarchyIndexes);
 
                     for (int j = 0; j < found_contours[i].Length; j++)
@@ -253,13 +248,12 @@ namespace KeepOffMeasure
 
             }
 
-            Cv2.Circle(debug_mat_two, debug_mat_two.Width/2, wire_end_y, 5, new Scalar(255, 0), thickness:2);
-            Cv2.ImShow("contours", src_canny);
-            Cv2.ImShow("all-contours", debug_mat_one);
-            Cv2.ImShow("heirachy", debug_mat_two);
-            MessageBox.Show("found " + found_contours.Length.ToString() + " contours\n" +
-                            "found " + hierarchyIndexes.Length.ToString() + " hieracrhies\n" + 
-                            "wire_end_y " + wire_end_y);
+            // second loop
+            // will need to find where CORE ends
+
+            Cv2.Circle(debug_mat, debug_mat.Width/2, wire_end_y, 5, new Scalar(255, 0), thickness:2);
+            Cv2.ImShow("canny", src_canny);
+            Cv2.ImShow("heirachy", debug_mat);
         }
 
     }
