@@ -48,8 +48,8 @@ namespace KeepOffMeasure
             txtBoxPixPerInch.Enabled = false;
             txtBoxPixPerMil.Enabled = false;
             camMeasure = new CamMeasure();
-            txtCannyThresh1.Text = "65";
-            txtCannyThresh2.Text = "75";
+            txtCannyThresh1.Text = "700";
+            txtCannyThresh2.Text = "300";
             this.ActiveControl = btnStartLiveFeed;
         }
 
@@ -215,10 +215,40 @@ namespace KeepOffMeasure
 
             // find the countours of this frame
             Cv2.FindContours(src_canny, out found_contours, out hierarchyIndexes,
-                             mode: RetrievalModes.External,
+                             mode: RetrievalModes.CComp,
                              method: ContourApproximationModes.ApproxNone);
 
+            /*
+                https://stackoverflow.com/questions/8461612/using-hierarchy-in-findcontours-in-opencv
+                https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
+                should test using differnet hierachy methods 
+             */
+            Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
+            //Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_16UC1);
+
+            Cv2.DrawContours(debug_mat, found_contours, -1, new Scalar(255, 0),
+                                     thickness: 2, hierarchy: hierarchyIndexes);
+
+            //Cv2.Line(debug_mat, mainFeedPicBox.Width/2, 10, mainFeedPicBox.Width/2, 150, new Scalar(255, 0), thickness:2);
+
+            string s = "";
+            for (int i = 0; i < hierarchyIndexes.Length; i++)
+            {
+                if (hierarchyIndexes[i].Child != -1)
+                {
+                    s += "index " + i + " child == " + hierarchyIndexes[i].Child + "\n" +
+                         "contours " + found_contours[i].Length + "\n\n";
+                    /*
+                    Cv2.DrawContours(debug_mat, found_contours, i, new Scalar(255, 0), 
+                                     thickness: 2, hierarchy: hierarchyIndexes);
+                    */
+                }
+            }
             Cv2.ImShow("contours", src_canny);
+            Cv2.ImShow("heirachy", debug_mat);
+            MessageBox.Show("found " + found_contours.Length.ToString() + " contours\n" +
+                            "found " + hierarchyIndexes.Length.ToString() + " hieracrhies\n\n" +
+                            s);
         }
 
     }

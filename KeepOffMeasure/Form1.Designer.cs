@@ -49,7 +49,7 @@
             // 
             this.mainFeedPicBox.Location = new System.Drawing.Point(282, 31);
             this.mainFeedPicBox.Name = "mainFeedPicBox";
-            this.mainFeedPicBox.Size = new System.Drawing.Size(491, 283);
+            this.mainFeedPicBox.Size = new System.Drawing.Size(490, 283);
             this.mainFeedPicBox.TabIndex = 0;
             this.mainFeedPicBox.TabStop = false;
             this.mainFeedPicBox.Click += new System.EventHandler(this.mainFeedPicBox_Click);
@@ -87,7 +87,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(321, 329);
+            this.label1.Location = new System.Drawing.Point(310, 323);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(73, 15);
             this.label1.TabIndex = 4;
@@ -95,14 +95,14 @@
             // 
             // txtBoxPixPerInch
             // 
-            this.txtBoxPixPerInch.Location = new System.Drawing.Point(400, 326);
+            this.txtBoxPixPerInch.Location = new System.Drawing.Point(389, 320);
             this.txtBoxPixPerInch.Name = "txtBoxPixPerInch";
             this.txtBoxPixPerInch.Size = new System.Drawing.Size(122, 23);
             this.txtBoxPixPerInch.TabIndex = 5;
             // 
             // txtBoxPixPerMil
             // 
-            this.txtBoxPixPerMil.Location = new System.Drawing.Point(624, 326);
+            this.txtBoxPixPerMil.Location = new System.Drawing.Point(613, 320);
             this.txtBoxPixPerMil.Name = "txtBoxPixPerMil";
             this.txtBoxPixPerMil.Size = new System.Drawing.Size(122, 23);
             this.txtBoxPixPerMil.TabIndex = 7;
@@ -110,7 +110,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(545, 329);
+            this.label2.Location = new System.Drawing.Point(534, 323);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(67, 15);
             this.label2.TabIndex = 6;
@@ -164,7 +164,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 353);
+            this.ClientSize = new System.Drawing.Size(820, 353);
             this.Controls.Add(this.txtCannyThresh2);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.txtCannyThresh1);
