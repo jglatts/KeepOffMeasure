@@ -26,20 +26,31 @@ namespace KeepOffMeasure
         private VideoCapture capture;
         private Bitmap image;
         private CamMeasure camMeasure;
+        private HierarchyIndex[] hierarchyIndexes;
         private int camIndex;
         private bool startPixCalibrate;
         private int pix_per_inch;
+        private int thresh_one;
+        private int thresh_two;
 
         public Form1()
         {
             InitializeComponent();
+            setFormObjects();
+            openWebCam();
+        }
+
+        private void setFormObjects()
+        {
             camIndex = 0;
             pix_per_inch = 0;
             startPixCalibrate = false;
             txtBoxPixPerInch.Enabled = false;
             txtBoxPixPerMil.Enabled = false;
             camMeasure = new CamMeasure();
-            openWebCam();
+            txtCannyThresh1.Text = "65";
+            txtCannyThresh2.Text = "75";
+            this.ActiveControl = btnStartLiveFeed;
         }
 
         private void openWebCam()
@@ -139,6 +150,22 @@ namespace KeepOffMeasure
 
         }
 
+        private bool getThreshValues()
+        {
+            bool ret = true;
+         
+            if (!Int32.TryParse(txtCannyThresh1.Text, out thresh_one) ||
+                !Int32.TryParse(txtCannyThresh2.Text, out thresh_two))
+            {
+                ret = false;
+            }
+
+            if (thresh_one < 0 || thresh_two < 0)
+                ret = false;
+
+            return ret;
+        }
+
         private void btnMeasureKeepOff_Click(object sender, EventArgs e)
         {
             if (pix_per_inch == 0)
@@ -147,7 +174,35 @@ namespace KeepOffMeasure
                 return;
             }
 
-            // image processing here
+            if (!getThreshValues())
+            {
+                MessageBox.Show("error\nplease check thresh values!");
+                return;
+            }
+
+            // test thresh values
+            // also test smaller AOI
+            Mat src_gray = new Mat(); 
+            Mat src_canny = new Mat();
+            Mat src_roi = frame.Clone();
+            OpenCvSharp.Point[][] contours;
+            OpenCvSharp.Point[][] found_contours;
+
+            // filter the image and remove noise
+            // could also consider shaperning or blurring
+            // https://stackoverflow.com/questions/4993082/how-can-i-sharpen-an-image-in-opencv
+            Cv2.CvtColor(src_roi, src_gray, ColorConversionCodes.BGR2GRAY);
+
+            // perform canny alg for edges
+            // https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
+            Cv2.Canny(src_gray, src_canny, thresh_one, thresh_two, 3, false);
+
+            // find the countours of this frame
+            Cv2.FindContours(src_canny, out found_contours, out hierarchyIndexes,
+                             mode: RetrievalModes.External,
+                             method: ContourApproximationModes.ApproxNone);
+
+            Cv2.ImShow("contours", src_canny);
         }
     }
 }
