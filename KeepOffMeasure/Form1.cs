@@ -32,6 +32,8 @@ namespace KeepOffMeasure
         private int pix_per_inch;
         private int thresh_one;
         private int thresh_two;
+        private double nominal_keepoff;
+        private double keepoff_tolerance;
         public static readonly string msg_title_str = "Z-Axis Connector Company";
         private static readonly int wire_contour_const = 30;
 
@@ -58,6 +60,8 @@ namespace KeepOffMeasure
         {
             camIndex = 0;
             pix_per_inch = 0;
+            nominal_keepoff = 0;
+            keepoff_tolerance = 0;
             startPixCalibrate = false;
             manualMeasure = false;
             txtBoxPixPerInch.Enabled = false;
@@ -164,10 +168,10 @@ namespace KeepOffMeasure
             }
             else if (manualMeasure)
             {
-                (bool ret, int dist) = camMeasure.addPointManualMeasure(frame, me.Location);
+                (bool ret, int dist) = camMeasure.addPointManualMeasure(frame.Clone(), me.Location);
                 if (ret)
                 {
-                    if (dist != 0 && pix_per_inch != 0)
+                    if (dist != 0 && pix_per_inch != -1 && pix_per_inch != 0)
                     {
                         double msrd_dist = Math.Round(dist / (double)pix_per_inch, 4);
                         MessageBox.Show("measured distance " + msrd_dist + "\"", msg_title_str);
@@ -193,6 +197,12 @@ namespace KeepOffMeasure
             return ret;
         }
 
+        private void tryGetNominalValues()
+        {
+            Double.TryParse(txtBoxNomKeepoff.Text, out nominal_keepoff);
+            Double.TryParse(txtBoxTol.Text, out keepoff_tolerance);
+        }
+
         private void btnMeasureKeepOff_Click(object sender, EventArgs e)
         {
             if (pix_per_inch == 0)
@@ -206,6 +216,8 @@ namespace KeepOffMeasure
                 MessageBox.Show("error\nplease check thresh values!", msg_title_str);
                 return;
             }
+            
+            tryGetNominalValues();
 
             try
             {
@@ -330,19 +342,42 @@ namespace KeepOffMeasure
             }
 
             // display findings
-            Cv2.Circle(debug_mat, debug_mat.Width/2, wire_end_y, 5, new Scalar(255, 0), thickness:2);
-            Cv2.Circle(debug_mat, debug_mat.Width/2, core_end_y, 5, new Scalar(255, 0), thickness:2);
-            Cv2.ImShow("canny", frame_canny);
-            Cv2.ImShow("heirachy", debug_mat);
-
-
-            if (keep_off_dist != 0)
+            // should print to a file
+            drawKeepOff(debug_mat, wire_end_y, core_end_y);
+            if (keep_off_dist != 0 &&  pix_per_inch != -1)
             {
                 txtBoxMsrdKeepOff.Enabled = true;
                 txtBoxMsrdKeepOff.Text = Math.Round(keep_off_dist, 4).ToString(); 
                 txtBoxMsrdKeepOff.Enabled = false;
-                MessageBox.Show("keep off distance:\n" + keep_off_dist + "\"", msg_title_str);
+                if (nominal_keepoff != 0)
+                {
+                    if (nominal_keepoff < 0)
+                    {
+                        MessageBox.Show("error\nnominal keep-off must be non-negative");
+                        return;
+                    }
+                    double diff = nominal_keepoff - keep_off_dist;
+                    string s = "Nominal Keep-Off:\t\t" + nominal_keepoff + "\"\n" + 
+                               "Measured Keep-Off:\t" + Math.Round(keep_off_dist, 4) + "\"\n" +
+                               "Off-By:\t\t\t" + Math.Round(diff, 4) + "\"";
+                    MessageBox.Show(s, msg_title_str);
+                }
+                else
+                {
+                    MessageBox.Show("keep off distance:\n" + keep_off_dist + "\"", msg_title_str);
+                }
             }
+        }
+
+        private void drawKeepOff(Mat debug_mat, int wire_end_y, int core_end_y)
+        {
+            int line_size = 400;
+            int x1 = (debug_mat.Width / 2) - (line_size / 2);
+            int x2 = x1 + line_size; Cv2.Circle(debug_mat, debug_mat.Width / 2, wire_end_y, 5, new Scalar(255, 0), thickness: 2);
+            Cv2.Circle(debug_mat, debug_mat.Width / 2, core_end_y, 5, new Scalar(255, 0), thickness: 2);
+            Cv2.Line(debug_mat, x1, core_end_y, x2, core_end_y, new Scalar(255, 0), thickness: 2);
+            Cv2.ImShow("canny", frame_canny);
+            Cv2.ImShow("heirachy", debug_mat);
         }
 
         private void btnManualMeasure_Click(object sender, EventArgs e)
