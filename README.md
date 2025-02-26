@@ -1,4 +1,4 @@
-# Measurment Program for Z-Axis Connector Company
+# Measurement Program for Z-Axis Connector Company
 Automatic real-time component measurement. 
 
 ## Dependencies
