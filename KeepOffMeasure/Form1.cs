@@ -1,3 +1,16 @@
+/**
+ *          ///,        ////
+ *          \  /,      /  >.
+ *           \  /,   _/  /.
+ *            \_  /_/   /.
+ *             \__/_   <
+ *             /<<< \_\_
+ *            /,)^>>_._ \
+ *            (/   \\ /\\\
+ *                 // ````
+ *                ((`
+ *                
+ */
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 
@@ -33,6 +46,11 @@ namespace KeepOffMeasure
         {
             frame = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
             mainFeedPicBox.Image = BitmapConverter.ToBitmap(frame);
+            txtBoxPixPerInch.Enabled = txtBoxPixPerMil.Enabled = true;
+            txtBoxPixPerInch.Text = "3550";
+            txtBoxPixPerMil.Text = "3.5";
+            pix_per_inch = 3550;
+            txtBoxPixPerInch.Enabled = txtBoxPixPerMil.Enabled = false;
         }
 
         private void setFormObjects()
@@ -75,6 +93,9 @@ namespace KeepOffMeasure
         private void startLiveFeed()
         {
             frame = new Mat();
+
+            if (capture == null)
+                return;
 
             if (!capture.IsOpened())
             {
@@ -184,7 +205,11 @@ namespace KeepOffMeasure
                 return;
             }
 
-            calcKeepOff();
+            try
+            {
+                calcKeepOff();
+            }
+            catch { }
         }
 
         /*

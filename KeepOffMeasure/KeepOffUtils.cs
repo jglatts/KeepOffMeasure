@@ -1,4 +1,17 @@
-﻿using Microsoft.VisualBasic;
+﻿/**
+ *          ///,        ////
+ *          \  /,      /  >.
+ *           \  /,   _/  /.
+ *            \_  /_/   /.
+ *             \__/_   <
+ *             /<<< \_\_
+ *            /,)^>>_._ \
+ *            (/   \\ /\\\
+ *                 // ````
+ *                ((`
+ *                
+ */
+using Microsoft.VisualBasic;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -85,7 +98,7 @@ namespace KeepOffMeasure
                 System.Drawing.Point point_two = manual_measure_points[1];
                 Mat copy = src_frame.Clone();
                 int x_val = point_one.X;
-                dist = Math.Abs(point_one.Y - point_one.X);
+                dist = Math.Abs(point_one.Y - point_two.Y);
                 Cv2.Line(copy, x_val, point_one.Y, x_val, point_two.Y, new Scalar(255, 0), thickness:2);
                 Cv2.ImShow("manual-measure", copy);
                 manual_measure_points.Clear();
