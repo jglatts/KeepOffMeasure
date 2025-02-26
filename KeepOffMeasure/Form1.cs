@@ -351,7 +351,6 @@ namespace KeepOffMeasure
 
         private void showKeepOffMeasurements(double keep_off_dist)
         {
-            // should print to a file as well
             string msg_str = "";
             txtBoxMsrdKeepOff.Enabled = true;
             txtBoxMsrdKeepOff.Text = Math.Round(keep_off_dist, 4).ToString();
@@ -359,42 +358,70 @@ namespace KeepOffMeasure
 
             if (nominal_keepoff != 0)
             {
-                if (nominal_keepoff < 0)
+                string str_check = checkKeepOffMeasurement(keep_off_dist);
+                if (str_check.Length == 0)
                 {
-                    MessageBox.Show("error\nnominal keep-off must be non-negative", msg_title_str);
                     return;
                 }
-                double diff = nominal_keepoff - keep_off_dist;
-                msg_str = "Nominal Keep-Off:\t\t" + nominal_keepoff + "\"\n" +
-                           "Measured Keep-Off:\t" + Math.Round(keep_off_dist, 4) + "\"\n" +
-                           "Off-By:\t\t\t" + Math.Round(diff, 4) + "\"";
-                if (keepoff_tolerance != 0)
-                {
-                    if (keepoff_tolerance < 0)
-                    {
-                        MessageBox.Show("error\nkeep-off tolerance must be non-negative", msg_title_str);
-                    }
-                    else
-                    {
-                        msg_str += "\n\nTolerance:\t\t" + keepoff_tolerance + "\"";
-                        if (Math.Abs(diff) < keepoff_tolerance)
-                        {
-                            msg_str += "\n\n\tIN SPEC";
-                        }
-                        else
-                        {
-                            msg_str += "\n\n\tOUT OF SPEC";
-                        }
-                    }
-                }
-
+                msg_str = str_check;
             }
             else
             {
                 msg_str = "keep off distance:\n" + keep_off_dist + "\"";
             }
 
+            writeDataToFile(msg_str);
             MessageBox.Show(msg_str, msg_title_str);
+        }
+
+        private string checkKeepOffMeasurement(double keep_off_dist)
+        {
+            string ret = "";
+
+            if (nominal_keepoff < 0)
+            {
+                MessageBox.Show("error\nnominal keep-off must be non-negative", msg_title_str);
+                return ret;
+            }
+
+            double diff = nominal_keepoff - keep_off_dist;
+            ret = "Nominal Keep-Off:\t\t" + nominal_keepoff + "\"\n" +
+                       "Measured Keep-Off:\t" + Math.Round(keep_off_dist, 4) + "\"\n" +
+                       "Off-By:\t\t\t" + Math.Round(diff, 4) + "\"";
+            if (keepoff_tolerance != 0)
+            {
+                if (keepoff_tolerance < 0)
+                {
+                    MessageBox.Show("error\nkeep-off tolerance must be non-negative", msg_title_str);
+                }
+                else
+                {
+                    ret += "\n\nTolerance:\t\t" + keepoff_tolerance + "\"";
+                    if (Math.Abs(diff) < keepoff_tolerance)
+                    {
+                        ret += "\n\n\tIN SPEC";
+                    }
+                    else
+                    {
+                        ret += "\n\n\tOUT OF SPEC";
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        private void writeDataToFile(string msg_str)
+        {
+            string file_name = System.DateTime.Now.Month + "-" + System.DateTime.Now.Day + "-" +
+                               System.DateTime.Now.Year + "-keepoff-logs.txt";
+            using (StreamWriter w = File.AppendText(file_name))
+            {
+                string write_str = "---------------------------------------------\n";
+                write_str += "Time: " + DateTime.Now.ToString("h:mm:ss") + "\n\n" + msg_str + "\n";
+                write_str += "---------------------------------------------\n\n";
+                w.WriteLine(write_str);
+            }
         }
 
         private void drawKeepOff(Mat debug_mat, int wire_end_y, int core_end_y)
