@@ -39,15 +39,15 @@ namespace KeepOffMeasure
         {
             InitializeComponent();
             setFormObjects();
-            //openWebCam();
-            setUpTest();
+            openWebCam();
+            //setUpTest();
         }
 
         public void setUpTest()
         {
             frame = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
             mainFeedPicBox.Image = BitmapConverter.ToBitmap(frame);
-            txtBoxPixPerInch.Enabled = txtBoxPixPerMil.Enabled = true;
+            txtBoxPixPerInch.Enabled = true; txtBoxPixPerMil.Enabled = true;
             txtBoxPixPerInch.Text = "3550";
             txtBoxPixPerMil.Text = "3.5";
             pix_per_inch = 3550;
@@ -62,6 +62,7 @@ namespace KeepOffMeasure
             manualMeasure = false;
             txtBoxPixPerInch.Enabled = false;
             txtBoxPixPerMil.Enabled = false;
+            txtBoxMsrdKeepOff.Enabled = false;
             camMeasure = new CamMeasure();
             txtCannyThresh1.Text = "770"; // increase this to leave out image noise
             txtCannyThresh2.Text = "300";
@@ -334,8 +335,14 @@ namespace KeepOffMeasure
             Cv2.ImShow("canny", frame_canny);
             Cv2.ImShow("heirachy", debug_mat);
 
+
             if (keep_off_dist != 0)
+            {
+                txtBoxMsrdKeepOff.Enabled = true;
+                txtBoxMsrdKeepOff.Text = Math.Round(keep_off_dist, 4).ToString(); 
+                txtBoxMsrdKeepOff.Enabled = false;
                 MessageBox.Show("keep off distance:\n" + keep_off_dist + "\"", msg_title_str);
+            }
         }
 
         private void btnManualMeasure_Click(object sender, EventArgs e)

@@ -42,6 +42,8 @@
             this.label4 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnManualMeasure = new System.Windows.Forms.Button();
+            this.txtBoxMsrdKeepOff = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.mainFeedPicBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -88,7 +90,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(307, 337);
+            this.label1.Location = new System.Drawing.Point(498, 324);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(73, 15);
             this.label1.TabIndex = 4;
@@ -96,22 +98,22 @@
             // 
             // txtBoxPixPerInch
             // 
-            this.txtBoxPixPerInch.Location = new System.Drawing.Point(386, 334);
+            this.txtBoxPixPerInch.Location = new System.Drawing.Point(511, 342);
             this.txtBoxPixPerInch.Name = "txtBoxPixPerInch";
-            this.txtBoxPixPerInch.Size = new System.Drawing.Size(122, 23);
+            this.txtBoxPixPerInch.Size = new System.Drawing.Size(50, 23);
             this.txtBoxPixPerInch.TabIndex = 5;
             // 
             // txtBoxPixPerMil
             // 
-            this.txtBoxPixPerMil.Location = new System.Drawing.Point(610, 334);
+            this.txtBoxPixPerMil.Location = new System.Drawing.Point(685, 341);
             this.txtBoxPixPerMil.Name = "txtBoxPixPerMil";
-            this.txtBoxPixPerMil.Size = new System.Drawing.Size(122, 23);
+            this.txtBoxPixPerMil.Size = new System.Drawing.Size(52, 23);
             this.txtBoxPixPerMil.TabIndex = 7;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(531, 337);
+            this.label2.Location = new System.Drawing.Point(674, 324);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(67, 15);
             this.label2.TabIndex = 6;
@@ -176,11 +178,29 @@
             this.btnManualMeasure.UseVisualStyleBackColor = true;
             this.btnManualMeasure.Click += new System.EventHandler(this.btnManualMeasure_Click);
             // 
+            // txtBoxMsrdKeepOff
+            // 
+            this.txtBoxMsrdKeepOff.Location = new System.Drawing.Point(326, 341);
+            this.txtBoxMsrdKeepOff.Name = "txtBoxMsrdKeepOff";
+            this.txtBoxMsrdKeepOff.Size = new System.Drawing.Size(64, 23);
+            this.txtBoxMsrdKeepOff.TabIndex = 14;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(302, 323);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(110, 15);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Measured Keep-Off";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(820, 396);
+            this.Controls.Add(this.txtBoxMsrdKeepOff);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.txtBoxPixPerMil);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.txtBoxPixPerInch);
@@ -213,5 +233,7 @@
         private Label label4;
         private GroupBox groupBox1;
         private Button btnManualMeasure;
+        private TextBox txtBoxMsrdKeepOff;
+        private Label label5;
     }
 }
