@@ -13,11 +13,6 @@
  */
 using Microsoft.VisualBasic;
 using OpenCvSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KeepOffMeasure
 {
@@ -37,7 +32,6 @@ namespace KeepOffMeasure
 
     public class CamMeasure
     {
-
         private List<System.Drawing.Point> calib_points;
         private List<System.Drawing.Point> manual_measure_points;
 
@@ -83,17 +77,13 @@ namespace KeepOffMeasure
 
             if (src_frame == null)
             {
-                MessageBox.Show("error with CamMeasure.addpoint()\n cam == null", Form1.msg_title_str);
+                MessageBox.Show("error with CamMeasure", Form1.msg_title_str);
                 return (ret, 0);
             }
 
             manual_measure_points.Add(point);
             if (manual_measure_points.Count == 2)
             {
-                // need 2 horiz lines at (cx, y2) and (cx, y1)
-                // where:
-                //      cx        = center of frame
-                //      y2 and y1 = user inputed locations 
                 System.Drawing.Point point_one = manual_measure_points[0];
                 System.Drawing.Point point_two = manual_measure_points[1];
                 Mat copy = src_frame.Clone();
@@ -114,7 +104,7 @@ namespace KeepOffMeasure
 
             if (src_frame == null)
             {
-                MessageBox.Show("error with CamMeasure.addpoint()\n cam == null", Form1.msg_title_str);
+                MessageBox.Show("error with CamMeasure", Form1.msg_title_str);
                 return ret;
             }
 

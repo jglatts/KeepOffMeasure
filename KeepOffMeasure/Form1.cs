@@ -19,6 +19,7 @@ namespace KeepOffMeasure
     public partial class Form1 : Form
     {
         private Mat frame;
+        private Mat frame_canny;
         private CancellationTokenSource cancelTokenSource;
         private CancellationToken token;
         private VideoCapture capture;
@@ -212,6 +213,89 @@ namespace KeepOffMeasure
             catch { }
         }
 
+        private OpenCvSharp.Point[][] getContours()
+        {
+            OpenCvSharp.Point[][] found_contours;
+            Mat src_gray = new Mat();
+            Mat src_roi = frame.Clone();
+            frame_canny = new Mat();
+
+            // filter the image and remove noise
+            // could also consider shaperning or blurring
+            // https://stackoverflow.com/questions/4993082/how-can-i-sharpen-an-image-in-opencv
+            Cv2.CvtColor(src_roi, src_gray, ColorConversionCodes.BGR2GRAY);
+
+            // perform canny alg for edges
+            // https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
+            Cv2.Canny(src_gray, frame_canny, thresh_one, thresh_two);
+
+            // find the countours of this frame
+            Cv2.FindContours(frame_canny, out found_contours, out hierarchyIndexes,
+                             mode: RetrievalModes.CComp,
+                             method: ContourApproximationModes.ApproxNone);
+
+            return found_contours;
+        }
+
+        private int findWireEdge(Mat debug_mat, OpenCvSharp.Point[][] found_contours)
+        {
+            // https://stackoverflow.com/questions/8461612/using-hierarchy-in-findcontours-in-opencv
+            // https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
+            // first pass for keep off measurment
+            // loop through all contours where child != 1
+            //      get the smallest y-value
+            //      that value is where the wire ENDS
+            int wire_end_y = 1000;
+
+            for (int i = 0; i < hierarchyIndexes.Length; i++)
+            {
+
+                // working OK with .Child != -1
+                // test out other values
+                if (hierarchyIndexes[i].Child != -1)
+                {
+                    // test this out, can check if we have wire end
+                    OpenCvSharp.Point[] check_contours = found_contours[i];
+                    if (check_contours.Length < wire_contour_const)
+                        continue;
+
+                    Cv2.DrawContours(debug_mat, found_contours, i, new Scalar(255, 0),
+                                     thickness: 2, hierarchy: hierarchyIndexes);
+
+                    for (int j = 0; j < found_contours[i].Length; j++)
+                    {
+                        int check_y = found_contours[i][j].Y;
+                        if (check_y < wire_end_y)
+                            wire_end_y = check_y;
+                    }
+
+                }
+            }
+            
+            return wire_end_y;
+        }
+
+        private int findCoreEdge(Mat debug_mat, OpenCvSharp.Point[][] found_contours)
+        {
+            int core_end_y = 1000;
+
+            // second pass
+            // will need to find where CORE ends
+            // naive:
+            //  (go through all contours and lowest y is the core end)
+            for (int i = 0; i < found_contours.Length; i++)
+            {
+                for (int j = 0; j < found_contours[i].Length; j++)
+                {
+                    int curr_y = found_contours[i][j].Y;
+                    if (curr_y < core_end_y)
+                        core_end_y = curr_y;
+                }
+            }
+
+            return core_end_y;
+        }
+
         /*
             In OpenCV's Canny edge detection, two threshold values, 
             threshold1 and threshold2, play a crucial role in the hysteresis thresholding stage. 
@@ -225,78 +309,16 @@ namespace KeepOffMeasure
         */
         private void calcKeepOff()
         {
-            OpenCvSharp.Point[][] found_contours;
-            Mat src_gray = new Mat();
-            Mat src_canny = new Mat();
             Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
-            Mat src_roi = frame.Clone();
-            int wire_end_y = 10000;
-            int core_end_y = 10000;
-            int keep_off_pix = -1;
             double keep_off_dist = 0;
 
-            // filter the image and remove noise
-            // could also consider shaperning or blurring
-            // https://stackoverflow.com/questions/4993082/how-can-i-sharpen-an-image-in-opencv
-            Cv2.CvtColor(src_roi, src_gray, ColorConversionCodes.BGR2GRAY);
+            // find the wire and core edge points
+            OpenCvSharp.Point[][] found_contours = getContours();
+            int wire_end_y = findWireEdge(debug_mat, found_contours);
+            int core_end_y = findCoreEdge(debug_mat, found_contours);
 
-            // perform canny alg for edges
-            // https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
-            Cv2.Canny(src_gray, src_canny, thresh_one, thresh_two);
-
-            // find the countours of this frame
-            Cv2.FindContours(src_canny, out found_contours, out hierarchyIndexes,
-                             mode: RetrievalModes.CComp,
-                             method: ContourApproximationModes.ApproxNone);
-
-            
-            // https://stackoverflow.com/questions/8461612/using-hierarchy-in-findcontours-in-opencv
-            // https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
-            // first loop for keep off measurment
-            // loop through all contours where child != 1
-            //      get the smallest y-value
-            //      that value is where the wire ENDS
-            for (int i = 0; i < hierarchyIndexes.Length; i++)
-            {
-
-                // working OK with .Child != -1
-                // test out other values
-                if (hierarchyIndexes[i].Child != -1)
-                {
-                    // test this out, can check if we have wire end
-                    OpenCvSharp.Point[] check_contours = found_contours[i];
-                    if (check_contours.Length < wire_contour_const)
-                        continue;
-                    
-                    Cv2.DrawContours(debug_mat, found_contours, i, new Scalar(255, 0),
-                                     thickness: 2, hierarchy: hierarchyIndexes);
-
-                    for (int j = 0; j < found_contours[i].Length; j++)
-                    {
-                        int check_y = found_contours[i][j].Y;
-                        if (check_y < wire_end_y)
-                            wire_end_y = check_y;
-                    }
-
-                }
-
-            }
-
-            // second loop
-            // will need to find where CORE ends
-            // naive:
-            //  (go through all contours and lowest y is the core end)
-            for (int i = 0; i < found_contours.Length; i++)
-            {
-                for (int j = 0; j < found_contours[i].Length; j++)
-                { 
-                    int curr_y = found_contours[i][j].Y;
-                    if (curr_y < core_end_y)
-                        core_end_y = curr_y;
-                }
-            }
-
-            keep_off_pix = wire_end_y - core_end_y;
+            // compute keep off
+            int keep_off_pix = wire_end_y - core_end_y;
             if (keep_off_pix > 0)
             {
                 Cv2.Line(debug_mat, debug_mat.Width/2, core_end_y, debug_mat.Width/2, wire_end_y, 
@@ -306,9 +328,10 @@ namespace KeepOffMeasure
 
             }
 
+            // display findings
             Cv2.Circle(debug_mat, debug_mat.Width/2, wire_end_y, 5, new Scalar(255, 0), thickness:2);
             Cv2.Circle(debug_mat, debug_mat.Width/2, core_end_y, 5, new Scalar(255, 0), thickness:2);
-            Cv2.ImShow("canny", src_canny);
+            Cv2.ImShow("canny", frame_canny);
             Cv2.ImShow("heirachy", debug_mat);
 
             if (keep_off_dist != 0)
