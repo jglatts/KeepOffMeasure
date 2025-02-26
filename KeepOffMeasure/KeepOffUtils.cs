@@ -25,12 +25,13 @@ namespace KeepOffMeasure
     public class CamMeasure
     {
 
-        private List<System.Drawing.Point> measure_points;
-        private Mat? frame;
+        private List<System.Drawing.Point> calib_points;
+        private List<System.Drawing.Point> manual_measure_points;
 
         public CamMeasure()
         {
-            measure_points = new List<System.Drawing.Point>();
+            manual_measure_points = new List<System.Drawing.Point>();
+            calib_points = new List<System.Drawing.Point>();
         }
 
         private PixelInfo computePixCalculations(Mat src_frame, int height)
@@ -38,10 +39,10 @@ namespace KeepOffMeasure
             PixelInfo ret = new PixelInfo();
 
             Mat frame = src_frame.Clone();
-            Cv2.Line(frame, measure_points[0].X, 0, measure_points[0].X, frame.Rows, new Scalar(0, 255), thickness: 3);
-            Cv2.Line(frame, measure_points[1].X, 0, measure_points[1].X, frame.Rows, new Scalar(0, 255), thickness: 3);
-            int pix_dist = Math.Abs(measure_points[1].X - measure_points[0].X);
-            Cv2.Line(frame, measure_points[0].X, height / 2, measure_points[1].X, height / 2, new Scalar(0, 255), thickness: 3);
+            Cv2.Line(frame, calib_points[0].X, 0, calib_points[0].X, frame.Rows, new Scalar(255, 0), thickness: 3);
+            Cv2.Line(frame, calib_points[1].X, 0, calib_points[1].X, frame.Rows, new Scalar(255, 0), thickness: 3);
+            int pix_dist = Math.Abs(calib_points[1].X - calib_points[0].X);
+            Cv2.Line(frame, calib_points[0].X, height / 2, calib_points[1].X, height / 2, new Scalar(255, 0), thickness: 3);
             MessageBox.Show("Pixel Distance: " + pix_dist, Form1.msg_title_str);
             string ret_input = Interaction.InputBox("Enter Pitch Of Measurements");
 
@@ -62,6 +63,38 @@ namespace KeepOffMeasure
             return ret;
         }
 
+        public (bool, int) addPointManualMeasure(Mat src_frame, System.Drawing.Point point)
+        {
+            bool ret = false;
+            int dist = 0;
+
+            if (src_frame == null)
+            {
+                MessageBox.Show("error with CamMeasure.addpoint()\n cam == null", Form1.msg_title_str);
+                return (ret, 0);
+            }
+
+            manual_measure_points.Add(point);
+            if (manual_measure_points.Count == 2)
+            {
+                // need 2 horiz lines at (cx, y2) and (cx, y1)
+                // where:
+                //      cx        = center of frame
+                //      y2 and y1 = user inputed locations 
+                System.Drawing.Point point_one = manual_measure_points[0];
+                System.Drawing.Point point_two = manual_measure_points[1];
+                Mat copy = src_frame.Clone();
+                int x_val = point_one.X;
+                dist = Math.Abs(point_one.Y - point_one.X);
+                Cv2.Line(copy, x_val, point_one.Y, x_val, point_two.Y, new Scalar(255, 0), thickness:2);
+                Cv2.ImShow("manual-measure", copy);
+                manual_measure_points.Clear();
+                ret = true;
+            }
+
+            return (ret, dist);
+        }
+
         public PixelInfo? addPoint(Mat src_frame, System.Drawing.Point point, int height)
         {
             PixelInfo? ret = null;
@@ -72,23 +105,23 @@ namespace KeepOffMeasure
                 return ret;
             }
 
-            measure_points.Add(point);
-            if (measure_points.Count == 2)
+            calib_points.Add(point);
+            if (calib_points.Count == 2)
             {
                 ret = computePixCalculations(src_frame, height);
                 if (ret.pix_per_mill == -1)
                 {
                     MessageBox.Show("error with calculations!", Form1.msg_title_str);
                 }
-                measure_points.Clear();
+                calib_points.Clear();
             }
 
             return ret;
         }
 
-        public List<System.Drawing.Point> getPoints()
+        public List<System.Drawing.Point> getCalibPoints()
         {
-            return measure_points;
+            return calib_points;
         }
     }
 

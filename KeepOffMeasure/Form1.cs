@@ -1,20 +1,5 @@
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
-using System.Diagnostics;
-using System.Numerics;
-using System.Runtime.Intrinsics;
-using System;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
-using System.Drawing;
-using System.Security.Cryptography;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Drawing.Imaging;
-
-
 
 namespace KeepOffMeasure
 {
@@ -29,6 +14,7 @@ namespace KeepOffMeasure
         private HierarchyIndex[] hierarchyIndexes;
         private int camIndex;
         private bool startPixCalibrate;
+        private bool manualMeasure;
         private int pix_per_inch;
         private int thresh_one;
         private int thresh_two;
@@ -39,7 +25,14 @@ namespace KeepOffMeasure
         {
             InitializeComponent();
             setFormObjects();
-            openWebCam();
+            //openWebCam();
+            setUpTest();
+        }
+
+        public void setUpTest()
+        {
+            frame = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
+            mainFeedPicBox.Image = BitmapConverter.ToBitmap(frame);
         }
 
         private void setFormObjects()
@@ -47,6 +40,7 @@ namespace KeepOffMeasure
             camIndex = 0;
             pix_per_inch = 0;
             startPixCalibrate = false;
+            manualMeasure = false;
             txtBoxPixPerInch.Enabled = false;
             txtBoxPixPerMil.Enabled = false;
             camMeasure = new CamMeasure();
@@ -120,36 +114,44 @@ namespace KeepOffMeasure
         private void btnCalibratePixPerMill_Click(object sender, EventArgs e)
         {
             if (!startPixCalibrate)
+            {
                 startPixCalibrate = true;
+                manualMeasure = false;
+            }
         }
 
         private void mainFeedPicBox_Click(object sender, EventArgs e)
         {
             MouseEventArgs me = (MouseEventArgs)e;
 
-            if (!startPixCalibrate)
+            if (startPixCalibrate)
             {
-                return;
+                PixelInfo? ret = camMeasure.addPoint(frame, me.Location, mainFeedPicBox.Height);
+                if (ret != null)
+                {
+                    pix_per_inch = ret.pix_per_inch;
+                    txtBoxPixPerInch.Enabled = true;
+                    txtBoxPixPerMil.Enabled = true;
+                    txtBoxPixPerInch.Text = ret.pix_per_inch.ToString();
+                    txtBoxPixPerMil.Text = Math.Round(ret.pix_per_mill, 3).ToString();
+                    txtBoxPixPerInch.Enabled = false;
+                    txtBoxPixPerMil.Enabled = false;
+                    startPixCalibrate = false;
+                }
             }
-
-            PixelInfo? ret = camMeasure.addPoint(frame, me.Location, mainFeedPicBox.Height);
-            if (ret != null)
+            else if (manualMeasure)
             {
-                pix_per_inch = ret.pix_per_inch;
-                txtBoxPixPerInch.Enabled = true;
-                txtBoxPixPerMil.Enabled = true;
-                txtBoxPixPerInch.Text = ret.pix_per_inch.ToString();
-                txtBoxPixPerMil.Text = Math.Round(ret.pix_per_mill, 3).ToString();
-                txtBoxPixPerInch.Enabled = false;
-                txtBoxPixPerMil.Enabled = false;
-                startPixCalibrate = false;
+                (bool ret, int dist) = camMeasure.addPointManualMeasure(frame, me.Location);
+                if (ret)
+                {
+                    if (dist != 0 && pix_per_inch != 0)
+                    {
+                        double msrd_dist = Math.Round(dist / (double)pix_per_inch, 4);
+                        MessageBox.Show("measured distance " + msrd_dist + "\"", msg_title_str);
+                    }
+                    manualMeasure = false;
+                }
             }
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
         }
 
         private bool getThreshValues()
@@ -198,18 +200,15 @@ namespace KeepOffMeasure
         */
         private void calcKeepOff()
         {
-            // test thresh values
-            // also test smaller AOI
+            OpenCvSharp.Point[][] found_contours;
             Mat src_gray = new Mat();
             Mat src_canny = new Mat();
             Mat debug_mat = new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1);
             Mat src_roi = frame.Clone();
-            OpenCvSharp.Point[][] found_contours;
             int wire_end_y = 10000;
             int core_end_y = 10000;
             int keep_off_pix = -1;
             double keep_off_dist = 0;
-
 
             // filter the image and remove noise
             // could also consider shaperning or blurring
@@ -225,12 +224,9 @@ namespace KeepOffMeasure
                              mode: RetrievalModes.CComp,
                              method: ContourApproximationModes.ApproxNone);
 
-            /*
-                https://stackoverflow.com/questions/8461612/using-hierarchy-in-findcontours-in-opencv
-                https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
-                should test using differnet hierachy methods 
-             */
-
+            
+            // https://stackoverflow.com/questions/8461612/using-hierarchy-in-findcontours-in-opencv
+            // https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
             // first loop for keep off measurment
             // loop through all contours where child != 1
             //      get the smallest y-value
@@ -291,8 +287,16 @@ namespace KeepOffMeasure
             Cv2.ImShow("heirachy", debug_mat);
 
             if (keep_off_dist != 0)
-                MessageBox.Show("keep off distance: " + keep_off_dist, msg_title_str);
+                MessageBox.Show("keep off distance:\n" + keep_off_dist + "\"", msg_title_str);
         }
 
+        private void btnManualMeasure_Click(object sender, EventArgs e)
+        {
+            if (!manualMeasure)
+            {
+                manualMeasure = true;
+                startPixCalibrate = false;
+            }
+        }
     }
 }
