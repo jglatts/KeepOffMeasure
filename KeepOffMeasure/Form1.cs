@@ -342,31 +342,59 @@ namespace KeepOffMeasure
             }
 
             // display findings
-            // should print to a file
             drawKeepOff(debug_mat, wire_end_y, core_end_y);
             if (keep_off_dist != 0 &&  pix_per_inch != -1)
             {
-                txtBoxMsrdKeepOff.Enabled = true;
-                txtBoxMsrdKeepOff.Text = Math.Round(keep_off_dist, 4).ToString(); 
-                txtBoxMsrdKeepOff.Enabled = false;
-                if (nominal_keepoff != 0)
-                {
-                    if (nominal_keepoff < 0)
-                    {
-                        MessageBox.Show("error\nnominal keep-off must be non-negative");
-                        return;
-                    }
-                    double diff = nominal_keepoff - keep_off_dist;
-                    string s = "Nominal Keep-Off:\t\t" + nominal_keepoff + "\"\n" + 
-                               "Measured Keep-Off:\t" + Math.Round(keep_off_dist, 4) + "\"\n" +
-                               "Off-By:\t\t\t" + Math.Round(diff, 4) + "\"";
-                    MessageBox.Show(s, msg_title_str);
-                }
-                else
-                {
-                    MessageBox.Show("keep off distance:\n" + keep_off_dist + "\"", msg_title_str);
-                }
+                showKeepOffMeasurements(keep_off_dist);
             }
+        }
+
+        private void showKeepOffMeasurements(double keep_off_dist)
+        {
+            // should print to a file as well
+            string msg_str = "";
+            txtBoxMsrdKeepOff.Enabled = true;
+            txtBoxMsrdKeepOff.Text = Math.Round(keep_off_dist, 4).ToString();
+            txtBoxMsrdKeepOff.Enabled = false;
+
+            if (nominal_keepoff != 0)
+            {
+                if (nominal_keepoff < 0)
+                {
+                    MessageBox.Show("error\nnominal keep-off must be non-negative", msg_title_str);
+                    return;
+                }
+                double diff = nominal_keepoff - keep_off_dist;
+                msg_str = "Nominal Keep-Off:\t\t" + nominal_keepoff + "\"\n" +
+                           "Measured Keep-Off:\t" + Math.Round(keep_off_dist, 4) + "\"\n" +
+                           "Off-By:\t\t\t" + Math.Round(diff, 4) + "\"";
+                if (keepoff_tolerance != 0)
+                {
+                    if (keepoff_tolerance < 0)
+                    {
+                        MessageBox.Show("error\nkeep-off tolerance must be non-negative", msg_title_str);
+                    }
+                    else
+                    {
+                        msg_str += "\n\nTolerance:\t\t" + keepoff_tolerance + "\"";
+                        if (Math.Abs(diff) < keepoff_tolerance)
+                        {
+                            msg_str += "\n\n\tIN SPEC";
+                        }
+                        else
+                        {
+                            msg_str += "\n\n\tOUT OF SPEC";
+                        }
+                    }
+                }
+
+            }
+            else
+            {
+                msg_str = "keep off distance:\n" + keep_off_dist + "\"";
+            }
+
+            MessageBox.Show(msg_str, msg_title_str);
         }
 
         private void drawKeepOff(Mat debug_mat, int wire_end_y, int core_end_y)
