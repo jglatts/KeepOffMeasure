@@ -34,10 +34,12 @@ namespace KeepOffMeasure
     {
         private List<System.Drawing.Point> calib_points;
         private List<System.Drawing.Point> manual_measure_points;
+        private List<System.Drawing.Point> manual_measure_points_x_axis;
 
         public CamMeasure()
         {
             manual_measure_points = new List<System.Drawing.Point>();
+            manual_measure_points_x_axis = new List<System.Drawing.Point>();
             calib_points = new List<System.Drawing.Point>();
         }
 
@@ -89,14 +91,44 @@ namespace KeepOffMeasure
                 Mat copy = src_frame.Clone();
                 int x_val = point_one.X;
                 dist = Math.Abs(point_one.Y - point_two.Y);
+                manual_measure_points.Clear();
                 Cv2.Line(copy, x_val, point_one.Y, x_val, point_two.Y, new Scalar(255, 0), thickness:2);
                 Cv2.ImShow("manual-measure", copy);
-                manual_measure_points.Clear();
                 ret = true;
             }
 
             return (ret, dist);
         }
+
+        public (bool, int) addPointManualMeasureXAxis(Mat src_frame, System.Drawing.Point point)
+        {
+            bool ret = false;
+            int dist = 0;
+
+            if (src_frame == null)
+            {
+                MessageBox.Show("error with CamMeasure", Form1.msg_title_str);
+                return (ret, 0);
+            }
+
+            manual_measure_points_x_axis.Add(point);
+            if (manual_measure_points_x_axis.Count == 2)
+            {
+                System.Drawing.Point point_one = manual_measure_points_x_axis[0];
+                System.Drawing.Point point_two = manual_measure_points_x_axis[1];
+                Mat copy = src_frame.Clone();
+                dist = Math.Abs(point_one.X - point_two.X);
+                manual_measure_points_x_axis.Clear();
+                Cv2.Line(copy, point_one.X, point_one.Y, point_two.X, point_one.Y, new Scalar(255, 0), thickness:2);
+                Cv2.Line(copy, point_one.X, 0, point_one.X, copy.Height, new Scalar(255, 0), thickness: 2);
+                Cv2.Line(copy, point_two.X, 0, point_two.X, copy.Height, new Scalar(255, 0), thickness: 2);
+                Cv2.ImShow("x-axis", copy);
+                ret = true;
+            }
+
+            return (ret, dist);
+        }
+
 
         public PixelInfo? addPoint(Mat src_frame, System.Drawing.Point point, int height)
         {

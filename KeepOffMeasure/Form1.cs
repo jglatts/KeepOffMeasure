@@ -29,6 +29,7 @@ namespace KeepOffMeasure
         private int camIndex;
         private bool startPixCalibrate;
         private bool manualMeasure;
+        private bool manualMeasureXAxis;
         private int pix_per_inch;
         private int thresh_one;
         private int thresh_two;
@@ -64,6 +65,7 @@ namespace KeepOffMeasure
             keepoff_tolerance = 0;
             startPixCalibrate = false;
             manualMeasure = false;
+            manualMeasureXAxis = false;
             txtBoxPixPerInch.Enabled = false;
             txtBoxPixPerMil.Enabled = false;
             txtBoxMsrdKeepOff.Enabled = false;
@@ -132,7 +134,7 @@ namespace KeepOffMeasure
                 }
                 mainFeedPicBox.Image = image;
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), msg_title_str);
             }
@@ -144,6 +146,7 @@ namespace KeepOffMeasure
             {
                 startPixCalibrate = true;
                 manualMeasure = false;
+                manualMeasureXAxis = false;
             }
         }
 
@@ -168,15 +171,30 @@ namespace KeepOffMeasure
             }
             else if (manualMeasure)
             {
+                // measure in y-axis
                 (bool ret, int dist) = camMeasure.addPointManualMeasure(frame.Clone(), me.Location);
                 if (ret)
                 {
                     if (dist != 0 && pix_per_inch != -1 && pix_per_inch != 0)
                     {
                         double msrd_dist = Math.Round(dist / (double)pix_per_inch, 4);
-                        MessageBox.Show("measured distance " + msrd_dist + "\"", msg_title_str);
+                        MessageBox.Show("y-axis measured distance " + msrd_dist + "\"", msg_title_str);
                     }
                     manualMeasure = false;
+                }
+            }
+            else if (manualMeasureXAxis)
+            {
+                // measure in x-axis
+                (bool ret, int dist) = camMeasure.addPointManualMeasureXAxis(frame.Clone(), me.Location);
+                if (ret)
+                {
+                    if (dist != 0 && pix_per_inch != -1 && pix_per_inch != 0)
+                    {
+                        double msrd_dist = Math.Round(dist / (double)pix_per_inch, 4);
+                        MessageBox.Show("x-axis measured distance " + msrd_dist + "\"", msg_title_str);
+                    }
+                    manualMeasureXAxis = false;
                 }
             }
         }
@@ -262,7 +280,7 @@ namespace KeepOffMeasure
 
             for (int i = 0; i < hierarchyIndexes.Length; i++)
             {
-
+                // found a wire if the contours has child contours
                 // working OK with .Child != -1
                 // test out other values
                 if (hierarchyIndexes[i].Child != -1)
@@ -336,7 +354,6 @@ namespace KeepOffMeasure
             {
                 Cv2.Line(debug_mat, debug_mat.Width/2, core_end_y, debug_mat.Width/2, wire_end_y, 
                          new Scalar(255, 0), thickness:2);
-
                 keep_off_dist = Math.Round(keep_off_pix / (double)pix_per_inch, 6);
 
             }
@@ -386,8 +403,8 @@ namespace KeepOffMeasure
 
             double diff = nominal_keepoff - keep_off_dist;
             ret = "Nominal Keep-Off:\t\t" + nominal_keepoff + "\"\n" +
-                       "Measured Keep-Off:\t" + Math.Round(keep_off_dist, 4) + "\"\n" +
-                       "Off-By:\t\t\t" + Math.Round(diff, 4) + "\"";
+                  "Measured Keep-Off:\t" + Math.Round(keep_off_dist, 4) + "\"\n" +
+                  "Off-By:\t\t\t" + Math.Round(diff, 4) + "\"";
             if (keepoff_tolerance != 0)
             {
                 if (keepoff_tolerance < 0)
@@ -396,8 +413,11 @@ namespace KeepOffMeasure
                 }
                 else
                 {
+                    // check if keep-off is within tolerance
+                    // could try a closed-loop if we get out-of-spec
+                    // retry a few times
                     ret += "\n\nTolerance:\t\t" + keepoff_tolerance + "\"";
-                    if (Math.Abs(diff) < keepoff_tolerance)
+                    if (Math.Abs(diff) <= keepoff_tolerance)
                     {
                         ret += "\n\n\tIN SPEC";
                     }
@@ -413,12 +433,13 @@ namespace KeepOffMeasure
 
         private void writeDataToFile(string msg_str)
         {
-            string file_name = System.DateTime.Now.Month + "-" + System.DateTime.Now.Day + "-" +
-                               System.DateTime.Now.Year + "-keepoff-logs.txt";
-            using (StreamWriter w = File.AppendText(file_name))
+            string file_name = DateTime.Now.Month + "-" + DateTime.Now.Day + "-" +
+                               DateTime.Now.Year + "-keepoff-logs.txt";
+            string full_path = "\\\\don-pc\\MfgBackups\\SharedDocs\\KeepOffMeasure\\logs\\" + file_name;
+            using (StreamWriter w = File.AppendText(full_path))
             {
                 string write_str = "---------------------------------------------\n";
-                write_str += "Time: " + DateTime.Now.ToString("h:mm:ss") + "\n\n" + msg_str + "\n";
+                write_str += "Time: " + DateTime.Now.ToString("(h:mm:ss tt)") + "\n\n" + msg_str + "\n";
                 write_str += "---------------------------------------------\n\n";
                 w.WriteLine(write_str);
             }
@@ -441,6 +462,17 @@ namespace KeepOffMeasure
             {
                 manualMeasure = true;
                 startPixCalibrate = false;
+                manualMeasureXAxis = false;
+            }
+        }
+
+        private void btnManualMeasureXAxis_Click(object sender, EventArgs e)
+        {
+            if (!manualMeasureXAxis)
+            { 
+                manualMeasureXAxis = true;
+                startPixCalibrate = false;
+                manualMeasure = false;
             }
         }
     }
