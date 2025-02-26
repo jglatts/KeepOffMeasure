@@ -1,6 +1,4 @@
-# KeepOffMeasure
-
-## Measurment Program for Z-Axis Connector Company
+# Measurment Program for Z-Axis Connector Company
 Automatic real-time component measurement. 
 
 ## Dependencies
