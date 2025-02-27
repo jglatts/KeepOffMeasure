@@ -1,10 +1,10 @@
-﻿#Theory of Operation: KeepOffMeasure System
+﻿# Theory of Operation: KeepOffMeasure System
 
-##Overview
+## Overview
 
 The KeepOffMeasure system is a vision-based measurement tool designed to analyze and determine keep-off distances in an industrial setting. Utilizing OpenCV for image processing and a connected camera for real-time video capture, the system allows for precise calibration and measurement of critical distances on workpieces.
 
-##System Components
+## System Components
 
 **Camera**: Captures live feed of the workpiece under inspection.
 
@@ -16,7 +16,7 @@ The KeepOffMeasure system is a vision-based measurement tool designed to analyze
 
 **Measurement Module**: Computes the keep-off distance by analyzing detected contours of the wire and core.
 
-##Operation Workflow
+## Operation Workflow
 
 1. Initialization
 
@@ -46,7 +46,7 @@ Once the wire and core edges are detected, the system calculates the keep-off di
 
 Users can manually measure distances by clicking on specific points in the image. The system supports both x-axis and y-axis measurements, allowing operators to verify distances interactively.
 
-##Error Handling
+## Error Handling
 
 **Camera Errors**: If the camera fails to initialize, the user receives an error message with troubleshooting details.
 
@@ -54,6 +54,6 @@ Users can manually measure distances by clicking on specific points in the image
 
 **Contour Detection Issues**: If contours are not detected correctly, users are advised to adjust threshold values to improve image processing accuracy.
 
-#Conclusion
+# Conclusion
 
 The KeepOffMeasure system provides a reliable and efficient method for measuring keep-off distances in industrial applications. Through real-time video capture, calibration, and automated contour detection, the system enhances precision and streamlines the measurement process for quality control and compliance verification
