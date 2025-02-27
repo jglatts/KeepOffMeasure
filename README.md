@@ -9,3 +9,6 @@ Automatic real-time component measurement.
 
 ## System Screenshot
 ![system_gui](https://raw.githubusercontent.com/jglatts/KeepOffMeasure/refs/heads/master/KeepOffMeasure/misc/gui.png)
+
+## Documentation 
+For detailed documentation, please see [here](https://github.com/jglatts/KeepOffMeasure/tree/master)
