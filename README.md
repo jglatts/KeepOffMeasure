@@ -11,4 +11,4 @@ Automatic real-time component measurement.
 ![system_gui](https://raw.githubusercontent.com/jglatts/KeepOffMeasure/refs/heads/master/KeepOffMeasure/misc/gui.png)
 
 ## Documentation 
-For detailed documentation, please see [here](https://github.com/jglatts/KeepOffMeasure/tree/master)
+For detailed documentation, please see [here](https://github.com/jglatts/KeepOffMeasure/blob/master/KeepOffMeasure/misc/TheoryOfOperations.md)

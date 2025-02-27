@@ -30,6 +30,7 @@ namespace KeepOffMeasure
         private bool startPixCalibrate;
         private bool manualMeasure;
         private bool manualMeasureXAxis;
+        private bool isStarted;
         private int pix_per_inch;
         private int thresh_one;
         private int thresh_two;
@@ -63,6 +64,7 @@ namespace KeepOffMeasure
             pix_per_inch = 0;
             nominal_keepoff = 0;
             keepoff_tolerance = 0;
+            isStarted = false;
             startPixCalibrate = false;
             manualMeasure = false;
             manualMeasureXAxis = false;
@@ -92,10 +94,21 @@ namespace KeepOffMeasure
 
         private void btnStartLiveFeed_Click(object sender, EventArgs e)
         {
-            cancelTokenSource = new CancellationTokenSource();
-            token = cancelTokenSource.Token;
-            Task task = new Task(startLiveFeed, token);
-            task.Start();
+            if (!isStarted)
+            {
+                cancelTokenSource = new CancellationTokenSource();
+                token = cancelTokenSource.Token;
+                Task task = new Task(startLiveFeed, token);
+                task.Start();
+                isStarted = true;
+            }
+            else
+            { 
+                cancelTokenSource.Cancel();
+                isStarted = false;
+                mainFeedPicBox.Image.Dispose();
+                mainFeedPicBox.Image = BitmapConverter.ToBitmap(new Mat(mainFeedPicBox.Height, mainFeedPicBox.Width, MatType.CV_8UC1));
+            }
         }
 
         private void startLiveFeed()
@@ -199,7 +212,7 @@ namespace KeepOffMeasure
             }
         }
 
-        private bool getThreshValues()
+        private bool getUserInputValues()
         {
             bool ret = true;
          
@@ -208,6 +221,8 @@ namespace KeepOffMeasure
             {
                 ret = false;
             }
+
+            tryGetNominalValues();
 
             if (thresh_one < 0 || thresh_two < 0)
                 ret = false;
@@ -229,14 +244,12 @@ namespace KeepOffMeasure
                 return;
             }
 
-            if (!getThreshValues())
+            if (!getUserInputValues())
             {
                 MessageBox.Show("error\nplease check thresh values!", msg_title_str);
                 return;
             }
             
-            tryGetNominalValues();
-
             try
             {
                 calcKeepOff();
@@ -273,7 +286,7 @@ namespace KeepOffMeasure
             // https://stackoverflow.com/questions/8461612/using-hierarchy-in-findcontours-in-opencv
             // https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
             // first pass for keep off measurment
-            // loop through all contours where child != 1
+            // loop through all contours where child != -1
             //      get the smallest y-value
             //      that value is where the wire ENDS
             int wire_end_y = 1000;
