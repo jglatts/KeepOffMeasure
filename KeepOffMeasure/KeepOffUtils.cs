@@ -16,6 +16,15 @@ using OpenCvSharp;
 
 namespace KeepOffMeasure
 {
+
+    public class Utils
+    {
+        public static readonly string msg_title_str = "Z-Axis Connector Company";
+        public static readonly int wire_contour_const = 30;
+        public static readonly string log_path_prod = "\\\\don-pc\\MfgBackups\\SharedDocs\\KeepOffMeasure\\logs\\";
+        public static readonly string log_path_test = "C:\\Users\\jglatts\\source\\repos\\KeepOffMeasure\\KeepOffMeasure\\logs\\";
+    }
+
     public class PixelInfo
     {
         public int pix_per_inch;
@@ -52,7 +61,7 @@ namespace KeepOffMeasure
             Cv2.Line(frame, calib_points[1].X, 0, calib_points[1].X, frame.Rows, new Scalar(255, 0), thickness: 3);
             int pix_dist = Math.Abs(calib_points[1].X - calib_points[0].X);
             Cv2.Line(frame, calib_points[0].X, height / 2, calib_points[1].X, height / 2, new Scalar(255, 0), thickness: 3);
-            MessageBox.Show("Pixel Distance: " + pix_dist, Form1.msg_title_str);
+            MessageBox.Show("Pixel Distance: " + pix_dist, Utils.msg_title_str);
             string ret_input = Interaction.InputBox("Enter Pitch Of Measurements");
 
             // compute pix-per-inch and others
@@ -64,7 +73,7 @@ namespace KeepOffMeasure
                 string s = "Pixels-Per-Inch:\t" + ret.pix_per_inch;
                 s += "\nPixels-Per-Mill:\t" + Math.Round(ret.pix_per_mill, 7);
                 s += "\nMills-Per-Pixel:\t" + Math.Round(ret.mill_per_pix, 7);
-                MessageBox.Show(s, Form1.msg_title_str);
+                MessageBox.Show(s, Utils.msg_title_str);
             }
 
             Cv2.ImShow("test", frame);
@@ -79,7 +88,7 @@ namespace KeepOffMeasure
 
             if (src_frame == null)
             {
-                MessageBox.Show("error with CamMeasure", Form1.msg_title_str);
+                MessageBox.Show("error with CamMeasure", Utils.msg_title_str);
                 return (ret, 0);
             }
 
@@ -107,7 +116,7 @@ namespace KeepOffMeasure
 
             if (src_frame == null)
             {
-                MessageBox.Show("error with CamMeasure", Form1.msg_title_str);
+                MessageBox.Show("error with CamMeasure", Utils.msg_title_str);
                 return (ret, 0);
             }
 
@@ -136,7 +145,7 @@ namespace KeepOffMeasure
 
             if (src_frame == null)
             {
-                MessageBox.Show("error with CamMeasure", Form1.msg_title_str);
+                MessageBox.Show("error with CamMeasure", Utils.msg_title_str);
                 return ret;
             }
 
@@ -146,7 +155,7 @@ namespace KeepOffMeasure
                 ret = computePixCalculations(src_frame, height);
                 if (ret.pix_per_mill == -1)
                 {
-                    MessageBox.Show("error with calculations!", Form1.msg_title_str);
+                    MessageBox.Show("error with calculations!", Utils.msg_title_str);
                 }
                 calib_points.Clear();
             }

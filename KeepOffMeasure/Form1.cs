@@ -36,15 +36,16 @@ namespace KeepOffMeasure
         private int thresh_two;
         private double nominal_keepoff;
         private double keepoff_tolerance;
-        public static readonly string msg_title_str = "Z-Axis Connector Company";
-        private static readonly int wire_contour_const = 30;
+        private double last_measured_val;
+        public string folder_path;
+
 
         public Form1()
         {
             InitializeComponent();
             setFormObjects();
-            openWebCam();
-            //setUpTest();
+            //openWebCam();
+            setUpTest();
         }
 
         public void setUpTest()
@@ -56,6 +57,7 @@ namespace KeepOffMeasure
             txtBoxPixPerMil.Text = "3.5";
             pix_per_inch = 3550;
             txtBoxPixPerInch.Enabled = txtBoxPixPerMil.Enabled = false;
+            folder_path = Utils.log_path_test;
         }
 
         private void setFormObjects()
@@ -64,6 +66,7 @@ namespace KeepOffMeasure
             pix_per_inch = 0;
             nominal_keepoff = 0;
             keepoff_tolerance = 0;
+            last_measured_val = 0;
             isStarted = false;
             startPixCalibrate = false;
             manualMeasure = false;
@@ -79,15 +82,16 @@ namespace KeepOffMeasure
 
         private void openWebCam()
         {
+            folder_path = Utils.log_path_prod;
             try
             {
                 capture = new VideoCapture(camIndex);
                 capture.Open(camIndex);
-                MessageBox.Show("Camera Found!", msg_title_str);
+                MessageBox.Show("Camera Found!", Utils.msg_title_str);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + "\n" + ex.StackTrace + "\n" + ex.InnerException, msg_title_str);
+                MessageBox.Show(ex.Message + "\n" + ex.StackTrace + "\n" + ex.InnerException, Utils.msg_title_str);
                 return;
             }
         }
@@ -149,7 +153,7 @@ namespace KeepOffMeasure
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), msg_title_str);
+                MessageBox.Show(ex.ToString(), Utils.msg_title_str);
             }
         }
 
@@ -191,7 +195,10 @@ namespace KeepOffMeasure
                     if (dist != 0 && pix_per_inch != -1 && pix_per_inch != 0)
                     {
                         double msrd_dist = Math.Round(dist / (double)pix_per_inch, 4);
-                        MessageBox.Show("y-axis measured distance " + msrd_dist + "\"", msg_title_str);
+                        last_measured_val = msrd_dist;
+                        writeDataToFile("", "x-axis");
+                        txtBoxMsrdKeepOff.Text = msrd_dist.ToString();
+                        MessageBox.Show("y-axis measured distance " + msrd_dist + "\"", Utils.msg_title_str);
                     }
                     manualMeasure = false;
                 }
@@ -205,7 +212,10 @@ namespace KeepOffMeasure
                     if (dist != 0 && pix_per_inch != -1 && pix_per_inch != 0)
                     {
                         double msrd_dist = Math.Round(dist / (double)pix_per_inch, 4);
-                        MessageBox.Show("x-axis measured distance " + msrd_dist + "\"", msg_title_str);
+                        last_measured_val = msrd_dist;
+                        writeDataToFile("", "x-axis");
+                        txtBoxMsrdKeepOff.Text = msrd_dist.ToString();
+                        MessageBox.Show("x-axis measured distance " + msrd_dist + "\"", Utils.msg_title_str);
                     }
                     manualMeasureXAxis = false;
                 }
@@ -240,13 +250,13 @@ namespace KeepOffMeasure
         {
             if (pix_per_inch == 0)
             {
-                MessageBox.Show("error\nplease calibrate pix-per-inch", msg_title_str);
+                MessageBox.Show("error\nplease calibrate pix-per-inch", Utils.msg_title_str);
                 return;
             }
 
             if (!getUserInputValues())
             {
-                MessageBox.Show("error\nplease check thresh values!", msg_title_str);
+                MessageBox.Show("error\nplease check thresh values!", Utils.msg_title_str);
                 return;
             }
             
@@ -300,7 +310,7 @@ namespace KeepOffMeasure
                 {
                     // test this out, can check if we have wire end
                     OpenCvSharp.Point[] check_contours = found_contours[i];
-                    if (check_contours.Length < wire_contour_const)
+                    if (check_contours.Length < Utils.wire_contour_const)
                         continue;
 
                     Cv2.DrawContours(debug_mat, found_contours, i, new Scalar(255, 0),
@@ -368,7 +378,7 @@ namespace KeepOffMeasure
                 Cv2.Line(debug_mat, debug_mat.Width/2, core_end_y, debug_mat.Width/2, wire_end_y, 
                          new Scalar(255, 0), thickness:2);
                 keep_off_dist = Math.Round(keep_off_pix / (double)pix_per_inch, 6);
-
+                last_measured_val = keep_off_dist;
             }
 
             // display findings
@@ -400,8 +410,8 @@ namespace KeepOffMeasure
                 msg_str = "keep off distance:\n" + keep_off_dist + "\"";
             }
 
-            writeDataToFile(msg_str);
-            MessageBox.Show(msg_str, msg_title_str);
+            writeDataToFile(msg_str, "y-axis");
+            MessageBox.Show(msg_str, Utils.msg_title_str);
         }
 
         private string checkKeepOffMeasurement(double keep_off_dist)
@@ -410,7 +420,7 @@ namespace KeepOffMeasure
 
             if (nominal_keepoff < 0)
             {
-                MessageBox.Show("error\nnominal keep-off must be non-negative", msg_title_str);
+                MessageBox.Show("error\nnominal keep-off must be non-negative", Utils.msg_title_str);
                 return ret;
             }
 
@@ -422,7 +432,7 @@ namespace KeepOffMeasure
             {
                 if (keepoff_tolerance < 0)
                 {
-                    MessageBox.Show("error\nkeep-off tolerance must be non-negative", msg_title_str);
+                    MessageBox.Show("error\nkeep-off tolerance must be non-negative", Utils.msg_title_str);
                 }
                 else
                 {
@@ -444,16 +454,19 @@ namespace KeepOffMeasure
             return ret;
         }
 
-        private void writeDataToFile(string msg_str)
+        private void writeDataToFile(string msg_str, string axis)
         {
             string file_name = DateTime.Now.Month + "-" + DateTime.Now.Day + "-" +
-                               DateTime.Now.Year + "-keepoff-logs.txt";
-            string full_path = "\\\\don-pc\\MfgBackups\\SharedDocs\\KeepOffMeasure\\logs\\" + file_name;
-            using (StreamWriter w = File.AppendText(full_path))
+                               DateTime.Now.Year + "-keepoff-logs.csv";
+
+            using (StreamWriter w = File.AppendText(folder_path + file_name))
             {
-                string write_str = "---------------------------------------------\n";
-                write_str += "Time: " + DateTime.Now.ToString("(h:mm:ss tt)") + "\n\n" + msg_str + "\n";
-                write_str += "---------------------------------------------\n\n";
+                string write_str = DateTime.Now.ToString("(h:mm:ss tt)") + ", " + last_measured_val + "\"";
+                if (msg_str.Length != 0)
+                {
+                    write_str += ", " + (msg_str.Contains("IN SPEC") ? "PASS" : "FAIL");
+                }
+                write_str += ", " + axis; 
                 w.WriteLine(write_str);
             }
         }
