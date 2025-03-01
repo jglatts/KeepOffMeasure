@@ -13,5 +13,8 @@ Automatic real-time component measurement.
 ## CAD Screenshot
 ![cad](https://raw.githubusercontent.com/jglatts/KeepOffMeasure/refs/heads/master/KeepOffMeasure/misc/machine.png)
 
+## Balloon Drawing
+![cad](https://github.com/jglatts/KeepOffMeasure/blob/master/KeepOffMeasure/misc/ATM-000-3D-A.pdf)
+
 ## Documentation 
 For detailed documentation, please see [here](https://github.com/jglatts/KeepOffMeasure/blob/master/KeepOffMeasure/misc/TheoryOfOperations.md)
